@@ -47,29 +47,29 @@ class image_converter:
     #DRAW contours
     cv2.drawContours(img, contours, -1, (0,255,0), 3)
 
-    cv2.imshow("Image window", img)
     cv2.imshow("Gray", imageGray)
     cv2.waitKey(3)
 
-    print(len(contours))
+    print("number of contours:", len(contours))
 
     for i in range(len(contours)):
         c=contours[i]
         area=cv2.contourArea(c)
 
-        if area>13000 and area<14000 :
-			M=cv2.moments(c)
-			if M["m00"] == 0:
-				continue
+        if area>7000:
+            M=cv2.moments(c)
+            if M["m00"] == 0:
+                continue
 
-			cx=int(M['m10']/M['m00'])
-			cy=int(M['m01']/M['m00'])
+            cx=int(M['m10']/M['m00'])
+            cy=int(M['m01']/M['m00'])
+            cv2.circle(img, (cx,cy), 1, (0,0,255))
 
-			print(i, "=", "cx:" , cx , "cy:", cy , "area" , area)
-
+            print(i, "=", "cx:" , cx , "cy:", cy , "area" , area)
+    cv2.imshow("Image window", img)
 
     try:
-      self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
+      self.image_pub.publish(self.bridge.cv2_to_imgmsg(img, "bgr8"))
     except CvBridgeError as e:
       print(e)
 
