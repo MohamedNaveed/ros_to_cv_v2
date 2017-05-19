@@ -9,6 +9,7 @@ import numpy as np
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
+from ros_to_cv_v2.msg import Center
 
 
 
@@ -16,9 +17,9 @@ class image_converter:
 
   def __init__(self):
     self.image_pub = rospy.Publisher("image_topic_2",Image, queue_size=10)
-
+    self.center_pub = rospy.Publisher("center" , Center, queue_size=1)
     self.bridge = CvBridge()
-    self.image_sub = rospy.Subscriber("/kinect2/qhd/image_color",Image,self.callback)
+    self.image_sub = rospy.Subscriber("/kinect2/sd/image_color_rect",Image,self.callback)
 
   def callback(self,data):
     try:
@@ -27,18 +28,18 @@ class image_converter:
       print(e)
 
     (rows,cols,channels) = cv_image.shape
-    #print("rows:", rows, "cols:", cols)
-    """if cols > 60 and rows > 60 :
-      cv2.circle(cv_image, (300,500), 25, (0,255,0))"""
+    print("rows:", rows, "cols:", cols)
+    #if cols > 60 and rows > 60 :
+     # cv2.circle(cv_image, (300,360), 10, (255,0,0))
 
-    pts1 = np.float32([[300,300],[500,300],[500,540],[300,500]])
-    pts2 = np.float32([[0,0],[960,0],[960,540],[0,540]])
+    pts1 = np.float32([[200,225],[300,225],[300,360],[200,360]])
+    pts2 = np.float32([[0,0],[cols,0],[cols,rows],[0,rows]])
 
     M = cv2.getPerspectiveTransform(pts1,pts2)
-    img = cv2.warpPerspective(cv_image,M,(960,540))
+    img = cv2.warpPerspective(cv_image,M,(cols,rows))
     cv2.imshow("Perspective",img)
 
-    imageGray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY) #Convert BGR to Gray
+    imageGray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY) #Convert BGR to Gray
     ret, thresh=cv2.threshold(imageGray,135,255,cv2.THRESH_BINARY)
     cv2.imshow("Thresh", thresh)
     #contours
@@ -64,12 +65,14 @@ class image_converter:
             cx=int(M['m10']/M['m00'])
             cy=int(M['m01']/M['m00'])
             cv2.circle(img, (cx,cy), 1, (0,0,255))
-
+            Center_msg.x=cx
+            Center_msg.y=cy
             print(i, "=", "cx:" , cx , "cy:", cy , "area" , area)
     cv2.imshow("Image window", img)
 
     try:
-      self.image_pub.publish(self.bridge.cv2_to_imgmsg(img, "bgr8"))
+      self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
+      self.center_pub.publish(Center_msg)
     except CvBridgeError as e:
       print(e)
 

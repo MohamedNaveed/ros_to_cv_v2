@@ -9,6 +9,7 @@ import numpy as np
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
+from ros_to_cv_v2.msg import Center
 
 
 
@@ -18,7 +19,12 @@ class image_depth:
     self.image_pub = rospy.Publisher("image_topic_depth",Image, queue_size=10)
 
     self.bridge = CvBridge()
-    self.image_sub = rospy.Subscriber("/kinect2/qhd/image_depth_rect",Image,self.callback)
+    self.image_sub = rospy.Subscriber("/kinect2/sd/image_depth",Image,self.callback)
+    rospy.Subscriber("/center", Center, self.callback)
+
+  def callback_depth(msg):
+      print("depth", img[msg.x][msg.y])
+      cv2.circle(img, (msg.x,msg.y), 15, (0,255,0))
 
   def callback(self,data):
     try:
@@ -31,14 +37,23 @@ class image_depth:
     #if cols > 60 and rows > 60 :
      # cv2.circle(cv_image, (300,500), 25, (0,255,0))
 
-    for a in range(rows):
-        print("depth", cv_image[a][100])
-    cv2.imshow('depth image', cv_image)
+    #for a in range(rows):
+    pts1 = np.float32([[200,225],[300,225],[300,360],[200,360]])
+    pts2 = np.float32([[0,0],[cols,0],[cols,rows],[0,rows]])
+
+    M = cv2.getPerspectiveTransform(pts1,pts2)
+    img = cv2.warpPerspective(cv_image,M,(cols,rows))
+    cv2.imshow("Perspective",img)
+
+    #print("depth", img[Center_msg.x][Center_msg.y])
+    #cv2.circle(img, (Center_msg.x,Center_msg.y), 15, (0,255,0))
+    cv2.imshow('depth image', img)
 
     try:
-      self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "passthrough"))
+      self.image_pub.publish(self.bridge.cv2_to_imgmsg(img, "passthrough"))
     except CvBridgeError as e:
       print(e)
+
 
 def main(args):
   ic = image_depth()
