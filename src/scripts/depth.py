@@ -28,10 +28,11 @@ class image_depth:
 
     (rows,cols) = cv_image.shape
     print("rows:", rows, "cols:", cols)
-    if cols > 60 and rows > 60 :
-      cv2.circle(cv_image, (300,500), 25, (0,255,0))
+    #if cols > 60 and rows > 60 :
+     # cv2.circle(cv_image, (300,500), 25, (0,255,0))
 
-    print("depth", cv_image)
+    for a in range(rows):
+        print("depth", cv_image[a][100])
     cv2.imshow('depth image', cv_image)
 
     try:
