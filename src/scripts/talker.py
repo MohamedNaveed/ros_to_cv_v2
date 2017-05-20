@@ -57,7 +57,7 @@ class image_converter:
         c=contours[i]
         area=cv2.contourArea(c)
 
-        if area>7000:
+        if area>4000:
             M=cv2.moments(c)
             if M["m00"] == 0:
                 continue
@@ -65,6 +65,7 @@ class image_converter:
             cx=int(M['m10']/M['m00'])
             cy=int(M['m01']/M['m00'])
             cv2.circle(img, (cx,cy), 1, (0,0,255))
+            Center_msg=Center()
             Center_msg.x=cx
             Center_msg.y=cy
             print(i, "=", "cx:" , cx , "cy:", cy , "area" , area)
